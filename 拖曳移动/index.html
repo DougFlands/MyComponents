@@ -1,0 +1,93 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="maximum-scale=1.0,minimum-scale=1.0,user-scalable=0,width=device-width,initial-scale=1.0"
+  />
+  <meta name="format-detection" content="telephone=no,email=no,date=no,address=no">
+  <title>底部导航</title>
+  <script type="text/javascript" src="script/api.js"></script>
+</head>
+
+<body>
+  <header>
+
+  </header>
+</body>
+
+</html>
+
+<script type="text/javascript">
+  apiready = function () {
+    $api.fixStatusBar($api.dom('header'));
+    api.setStatusBarStyle({
+      color: '#03a9f4'
+    });
+    // $api.rmStorage($api.getStorage('user'))
+    // $api.rmStorage('user')
+
+    // 登陆时效
+    var tim = function () {
+      // 30天毫秒数
+      var oneMonth = 2592000000,
+        de = new Date().getTime().toString() - $api.getStorage('loginTime').toString() | 0;
+      if (de > oneMonth) {
+        return true
+      } else {
+        return false
+      }
+    }
+    if ($api.getStorage('user')) {
+      // 超过30天则重新登录
+      if (tim()) {
+        login()
+        api.addEventListener({
+          name: 'login'
+        }, function (ret, err) {
+          dra();
+        });
+      } else {
+        //AJAX请求
+        //请求成功
+        dra();
+      }
+    } else {
+      //弹出登录框
+      login()
+      api.addEventListener({
+        name: 'login'
+      }, function (ret, err) {
+        dra();
+      });
+    }
+  }
+
+  // 打开登陆
+  function login() {
+    api.openWin({
+      name: 'login',
+      bounces: false,
+      bgColor: 'rgb(255,255,255)',
+      vScrollBarEnabled: false,
+      url: './html/login.html',
+      animation: {
+        type: "movein",
+        subType: "from_bottom"
+      }
+    })
+  }
+  // 打开首页
+  var dra = function () {
+    api.openWin({
+      name: 'main',
+      bounces: false,
+      bgColor: 'rgb(255,255,255)',
+      vScrollBarEnabled: false,
+      url: './html/main.html',
+      animation: {
+        type: 'push'
+      }
+    });
+  };
+</script>

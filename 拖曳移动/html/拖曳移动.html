@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
+  <script src="../script/api.js"></script>
+  <script src="../script/vue.js"></script>
+  <script src="../script/Sortable.js"></script>
+  <script src="../script/vuedraggable.min.js"></script>
+  <script src="../script/hammer.min.js"></script>
+  <script src="../assets/swiper/swiper.min.js"></script>
+  <script src="../assets/swiper/vue-awesome-swiper.js"></script>
+  <script src="../assets/mint/index.js"></script>
+  <link rel="stylesheet" type="text/css" href="../assets/mint/style.css">
+  <link rel="stylesheet" type="text/css" href="../assets/swiper/swiper.min.css">
+  <link rel="stylesheet" type="text/css" href="../assets/logo/iconfont.css">
+  <link rel="stylesheet" type="text/css" href="../assets/aui/css/aui.css">
+  <style>
+    [v-cloak] {
+      display: none;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #warp {
+      width: 100%;
+      height: 100%;
+    }
+
+    .operatingRoomList {
+      width: 100%;
+      min-height: 36rem;
+    }
+
+    .roomList {
+      display: flex;
+      justify-content: space-around;
+      padding: 0.75rem 0 0.65rem;
+      border-bottom: 1px solid #F0F0F0;
+      font-size: 0.7rem;
+      background-color: white;
+    }
+
+    .roomListActive {
+      background-color: #F0F0F0;
+    }
+
+    .roomList i {
+      font-size: 1.5rem;
+    }
+
+    .roomList span {
+      margin-top: 1em;
+    }
+
+    .roomList .iconLv {
+      margin-left: -1rem;
+    }
+
+    .roomList .name {
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+      width: 6.5rem;
+    }
+
+    .roomList .icon-tuodong {
+      margin-right: 1rem;
+    }
+
+    .none {
+      color: #F0F0F0;
+    }
+
+    .none .iconLv {
+      display: none;
+    }
+
+    .select {}
+  </style>
+</head>
+
+<body>
+  <div id="warp" v-cloak>
+    <swiper class="operatingRoom swiper-wrapper" :options="swiperOption" ref="mySwiper" v-cloak>
+      <swiper-slide v-for="(item, num) in operatingRoomList" :key="num" class="swiper-slide" :id="num">
+        <draggable v-model="item.operatingList" class="operatingRoomList" :options="{animation: 100, chosenClass:'roomListActive', ghostClass:'none',handle:'.icon-tuodong', group:{ name:'operating'},fallbackOnBody:true, fallbackClass:'select'}"
+          @end="draggaEnd">
+          <div v-for="(val, index) in item.operatingList" :key="index" class="roomList" @click="operatingDetail($event)">
+            <i class="iconfont icon-yisheng-"></i>
+            <span class="name">{{val.name}}</span>
+            <i class="iconfont iconLv" :class="val.type ? operatingLv[val.type-1].lv : '' " :style="{color: operatingLv[val.type-1].color}"></i>
+            <span class="doc">{{val.doc}}</span>
+            <span class="roomTime">{{ val.time }}</span>
+            <i class="iconfont icon-tuodong swiper-no-swiping" :id="(num+1)*100 + index+1"></i>
+          </div>
+        </draggable>
+      </swiper-slide>
+    </swiper>
+
+    <mt-datetime-picker ref="picker" v-model="pickerVisible" type="date" :start-date="startDate" year-format="{value} 年" month-format="{value} 月"
+      date-format="{value} 日" @confirm="handleConfirm">
+    </mt-datetime-picker>
+
+  </div>
+</body>
+<script>
+
+    Vue.use(VueAwesomeSwiper)
+    var warp = new Vue({
+      el: '#warp',
+      data: function () {
+        var that = this
+        return {
+          nowOperatingRoomIndex: 0, // 目前页数
+          nowOperatingRoomMove: 0,// 目前移动距离
+          operatingRoomList: [{
+              roomType: 1,
+              operatingList: [{
+                  name: '手术室1手术1手术1手术1手术1手术1手术1手术1',
+                  doc: '医生A',
+                  time: '09:00',
+                  type: 1
+                },
+                {
+                  name: '手术室1手术2手术2手术2手术2手术2手术2手术2',
+                  doc: '医生B',
+                  time: '10:00',
+                  type: 2
+                },
+                {
+                  name: '手术室1手术3手术3手术3手术3手术3手术3手术3',
+                  doc: '医生C',
+                  time: '11:00',
+                  type: 3
+                },
+                {
+                  name: '手术室1手术4手术4手术4手术4手术4手术4手术4',
+                  doc: '医生D',
+                  time: '14:00',
+                  type: 4
+                }
+              ]
+            },
+            {
+              operatingRoomName: '正负压 No.1',
+              roomType: 2,
+              operatingList: [{
+                  name: '手术室2手术1手术1手术1手术1手术1手术1手术1',
+                  doc: '医生A',
+                  time: '09:00',
+                  type: 1
+                },
+                {
+                  name: '手术室2手术2手术2手术2手术2手术2手术2手术2',
+                  doc: '医生B',
+                  time: '10:00',
+                  type: 2
+                },
+                {
+                  name: '手术室2手术3手术3手术3手术3手术3手术3手术3',
+                  doc: '医生C',
+                  time: '11:00',
+                  type: 3
+                },
+                {
+                  name: '手术室2手术4手术4手术4手术4手术4手术4手术4',
+                  doc: '医生D',
+                  time: '14:00',
+                  type: 4
+                }
+              ]
+            },
+            {
+              operatingRoomName: '腔镜 No.1',
+              roomType: 3,
+              operatingList: [{
+                  name: '手术室3手术1手术1手术1手术1手术1手术1手术1',
+                  doc: '医生A',
+                  time: '09:00',
+                  type: 1
+                },
+                {
+                  name: '手术室3手术2手术2手术2手术2手术2手术2手术2',
+                  doc: '医生B',
+                  time: '10:00',
+                  type: 2
+                },
+                {
+                  name: '手术室3手术3手术3手术3手术3手术3手术3手术3',
+                  doc: '医生C',
+                  time: '11:00',
+                  type: 3
+                },
+                {
+                  name: '手术室3手术4手术4手术4手术4手术4手术4手术4',
+                  doc: '医生D',
+                  time: '14:00',
+                  type: 4
+                }
+              ]
+            }
+          ],// 手术列表
+          operatingLv: [{
+              lv: 'icon-shoushu',
+              color: '#4D5FEF'
+            },
+            {
+              lv: 'icon-shoushu1',
+              color: '#4BA9C0'
+            },
+            {
+              lv: 'icon-shoushu2',
+              color: '#6064CA'
+            },
+            {
+              lv: 'icon-shoushu3',
+              color: '#F18147'
+            }
+          ],// 手术等级的图标
+          swiperOption: {
+            roundLengths: true,
+            observer: true,
+            observeParents: true,
+            resistanceRatio: 0,
+            on: {
+              slideChangeTransitionStart: function () {
+                that.nowOperatingRoomIndex = this.activeIndex
+              },
+              setTranslate: function (i) {
+                if (i >= 0) {
+                  that.whetherMoveDirection = '';
+                  that.mandatoryMove = true
+                } else if (Math.abs(i) >= window.screen.width * (that.operatingRoomList.length - 1)) {
+                  that.whetherMoveDirection = '';
+                  that.mandatoryMove = true
+                } else {
+                  that.mandatoryMove = false
+                }
+              },
+            },
+          },// 轮播图插件的配置
+          whetherMoveDirection: '',// 那个方向移动
+          mandatoryMove: false, // 是否移动中
+          interval: null, // 持续移动的定时器
+          // 时间选择
+          pickerVisible: '',
+          startDate: new Date(),
+        }
+      },
+      methods: {
+        operatingDetail: function (e) {
+          // var index = e.target.id | e.target.parentNode.id
+          api.openWin({
+            name: 'ScheduleDetailsWin',
+            url: './ScheduleDetailsWin.html',
+            vScrollBarEnabled: false,
+            bounces: false,
+            bgColor: '#FFFFFF',
+            rect: {
+              x: 0,
+              y: api.pageParam.header,
+              w: 'auto',
+              h: api.winHeight
+            },
+            pageParam: {
+              header: api.pageParam.header,
+              isSwitch: api.pageParam.isSwitch
+            },
+          });
+        },
+        slideMove: function (i) {
+          this.$refs.mySwiper.swiper.setTranslate(i);
+        },
+        slideTo: function (i) {
+          this.$refs.mySwiper.swiper.slideTo(i, 0, false);
+        },
+        hammer: function () {
+          var that = this
+          for (var i = 0; i < this.operatingRoomList.length; i++) {
+            for (var n = 0; n < this.operatingRoomList[i].operatingList.length; n++) {
+              // 给所有列行绑定Hammer移动事件
+              (new Hammer(document.getElementById((i + 1) * 100 + n + 1))).on('pan', function (e) {
+                that.hammerMove(e)
+              });
+            }
+          }
+        },
+        hammerMove: function (e) {
+          if (!this.mandatoryMove) {
+            if (e.center.x > window.screen.width - 30) {
+              this.whetherMoveDirection = 'r'
+            } else if (e.center.x < 30) {
+              this.whetherMoveDirection = 'l'
+            } else {
+              this.whetherMoveDirection = ''
+            }
+          }
+        },
+        operatingRoomWinMove: function (type) {
+          if (type == 'r') {
+            // 右移
+            this.nowOperatingRoomMove -= 5
+            this.slideMove(this.nowOperatingRoomMove)
+          } else if (type == 'l') {
+            // 左移
+            this.nowOperatingRoomMove += 5
+            this.slideMove(this.nowOperatingRoomMove)
+          }
+        },
+        draggaEnd: function (e) {
+          this.hammer()
+          this.nowOperatingRoomIndex = e.to.offsetParent.id
+          this.whetherMoveDirection = ''
+          this.mandatoryMove = false
+          this.slideTo(e.to.offsetParent.id)
+        },
+        handleConfirm: function (e) {
+          var that = this
+          //发送数据
+          api.sendEvent({
+              name: 'pickerSend',
+              extra: {
+                time: e,
+                pickerVisible: that.pickerVisible
+              }
+            });
+        },
+      },
+      mounted: function () {
+        var that = this
+        this.hammer()
+
+        // 监听手术室选择
+        api.addEventListener({
+          name: 'changeOperatingRoomList'
+        }, function (ret, err) {
+          that.slideTo(ret.value.index)
+        });
+
+        // 监听是否打开时间选择
+        api.addEventListener({
+          name: 'pickerReceive'
+        }, function (ret, err) {
+          if (ret.value.picker) {
+            that.$refs.picker.open();
+          }
+        });
+
+        // api.addEventListener({
+        //   name: api.frameName
+        // }, function (ret, err) {
+        //   that.operatingRoomList = ret.value.operatingRoomList.operatingList
+        // });
+        // console.log(JSON.stringify(api.pageParam))
+      },
+      watch: {
+        /*         operatingRoomList: {
+                  handler: function (val, oldval) {
+                    this.$nextTick(function () {
+                      this.hammer()
+                      console.log('重新绑定')
+                    })
+                  },
+                  deep: true
+                }, */
+        nowOperatingRoomIndex: {
+          handler: function (val) {
+            this.nowOperatingRoomMove = -val * window.screen.width
+            api.sendEvent({
+              name: 'operatingRoomList',
+              extra: {
+                index: val,
+              }
+            });
+          },
+        },
+        whetherMoveDirection: {
+          handler: function (val) {
+            var that = this
+            if (val != '') {
+              this.interval = setInterval(function () {
+                that.operatingRoomWinMove(val)
+              }, 15)
+            } else {
+              clearInterval(that.interval)
+            }
+          },
+        },
+      },
+    })
+  
+</script>
+
+</html>
